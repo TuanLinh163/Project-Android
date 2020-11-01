@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">Project</string>
+    <string name="this_is_main_page">This is main Page</string>
+    <string name="need_a_new_account">Need a new account ?</string>
+    <string name="account_name">Account Name</string>
+    <string name="email">Email</string>
+    <string name="create_account">CREATE ACCOUNT</string>
+    <string name="password">Password</string>
+    <string name="log_out">Log Out</string>
+    <string name="create_a_new_account">Create a New Account</string>
+    <string name="already_have_account">ALREADY HAVE ACCOUNT</string>
+    <string name="welcome_to_my_chat_app">Welcome to my Chat App</string>
+    <string name="lgin_to_your_account">Lgin to your Account</string>
+    <string name="login">Login</string>
+    <string name="your_password">Your Password</string>
+    <string name="your_email">Your Email</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="change_status">CHANGE STATUS</string>
+    <string name="change_image">CHANGE IMAGE</string>
+    <string name="hi_there_i_m_using_my_project">Hi there, I\'m using my project</string>
+    <string name="display_name">Display Name</string>
+    <string name="hi_there_im_using_my_project">Hi there, Im using my project</string>
+    <string name="status">Status</string>
+    <string name="save">SAVE</string>
+</resources>
