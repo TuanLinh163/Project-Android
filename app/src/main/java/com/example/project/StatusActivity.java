@@ -60,13 +60,14 @@ public class StatusActivity extends AppCompatActivity {
                 mProgress.setCanceledOnTouchOutside(false);
                 mProgress.show();
 
-
                 String status = mStatus.getEditText().getText().toString();
                 mStatusDatabase.child("status").setValue(status).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()) {
                             mProgress.dismiss();
+                            finish();
+                            Toast.makeText(getApplicationContext(), "Save your status successfully.", Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(getApplicationContext(), "There are some error in saving your status", Toast.LENGTH_SHORT).show();
                         }

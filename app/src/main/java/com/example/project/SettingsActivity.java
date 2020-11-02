@@ -4,14 +4,19 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.StringBuilderPrinter;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -19,8 +24,14 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
+
+import java.util.Random;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -37,6 +48,11 @@ public class SettingsActivity extends AppCompatActivity {
 
     private static final int GALLERY_PICK = 1;
 
+    // Firebase Storage
+    private StorageReference mImageStorage;
+
+    private ProgressDialog mProgress;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +65,8 @@ public class SettingsActivity extends AppCompatActivity {
         mStatusBtn = findViewById(R.id.settings_status_btn);
         mImageBtn = findViewById(R.id.settings_image_btn);
 
+        mImageStorage = FirebaseStorage.getInstance().getReference();
+
         mCurrentUser = FirebaseAuth.getInstance().getCurrentUser();
         String current_uid = mCurrentUser.getUid();
         mUserDatabase = FirebaseDatabase.getInstance().getReference().child("Users").child(current_uid);
@@ -59,10 +77,12 @@ public class SettingsActivity extends AppCompatActivity {
                 String image = snapshot.child("image").getValue().toString();
                 String status = snapshot.child("status").getValue().toString();
                 String thumb_image = snapshot.child("thumb_image").getValue().toString();
-                // Toast.makeText(SettingsActivity.this, snapshot.toString(), Toast.LENGTH_SHORT).show();
 
                 mName.setText(name);
                 mStatus.setText(status);
+
+                // Use library Picasso to get image from internet
+                Picasso.get().load(image).into(mDisplayImage);
             }
 
             @Override
@@ -105,9 +125,65 @@ public class SettingsActivity extends AppCompatActivity {
             Uri imageUri = data.getData();
 
             CropImage.activity(imageUri)
+                    .setAspectRatio(1,1)
                     .start(this);
-
-            //Toast.makeText(SettingsActivity.this, imageUri, Toast.LENGTH_SHORT).show();
         }
+
+        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
+            CropImage.ActivityResult result = CropImage.getActivityResult(data);
+
+            if (resultCode == RESULT_OK) {
+                mProgress = new ProgressDialog(SettingsActivity.this);
+                mProgress.setTitle("Uploading Image...");
+                mProgress.setMessage("Please wait a moment.");
+                mProgress.setCanceledOnTouchOutside(false);
+                mProgress.show();
+
+                Uri resultUri = result.getUri();
+                String current_user_id = mCurrentUser.getUid();
+                final StorageReference filepath = mImageStorage.child("profile_images").child(current_user_id + ".jpg");
+                filepath.putFile(resultUri).addOnCompleteListener(new OnCompleteListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<UploadTask.TaskSnapshot> task) {
+                        if (task.isSuccessful()) {
+                            filepath.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                @Override
+                                public void onSuccess(Uri uri) {
+                                    String download_url = uri.toString();
+                                    mUserDatabase.child("image").setValue(download_url).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                        @Override
+                                        public void onComplete(@NonNull Task<Void> task) {
+                                            if (task.isSuccessful()) {
+                                                mProgress.dismiss();
+                                                Toast.makeText(SettingsActivity.this,
+                                                        "Upload complete. Change your image successfully.",
+                                                        Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    });
+                                }
+                            });
+                        } else {
+                            mProgress.dismiss();
+                            Toast.makeText(SettingsActivity.this, "Errors in uploading.", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE) {
+                Exception error = result.getError();
+            }
+        }
+    }
+
+    public static String random() {
+        Random generator = new Random();
+        StringBuilder randomStringBuilder = new StringBuilder();
+        int randomLength = generator.nextInt(10);
+        char tempChar;
+        for (int i = 0; i < randomLength; i ++) {
+            tempChar = (char) (generator.nextInt(96) + 32);
+            randomStringBuilder.append(tempChar);
+        }
+        return randomStringBuilder.toString();
     }
 }
