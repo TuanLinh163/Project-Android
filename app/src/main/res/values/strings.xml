@@ -23,4 +23,6 @@
     <string name="hi_there_im_using_my_project">Hi there, Im using my project</string>
     <string name="status">Status</string>
     <string name="save">SAVE</string>
+    <string name="display_names">Display Name</string>
+    <string name="user_default_status">User default status</string>
 </resources>
